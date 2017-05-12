@@ -10,14 +10,14 @@ select
 	a14.brand,
 	a15.device_major_category_id
 from
-        dse.cs_device_contact_agg	a11
-join	dse.device_client_rollup_d	a12 
+        dse.cs_device_contact_agg a11
+join	dse.device_client_rollup_d a12 
         on (a11.device_client_ver = a12.client_version and 
 	    a11.device_type_id = a12.device_type_id)
-join	dse.device_model_rollup_d	a14
+join	dse.device_model_rollup_d a14
 	    on (a11.device_model = a14.device_model and 
 	    a11.device_type_id = a14.device_type_id)
-join	dse.device_category_d	a15
+join	dse.device_category_d a15
 	    on (a14.device_category_id = a15.device_category_id)
 where a11.fact_date > 20170101
 
