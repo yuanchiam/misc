@@ -1,14 +1,19 @@
 select
-    a11.fact_date,
-	a11.device_type_id,
-	a11.device_model,
+        a11.*,
+        --a11.fact_date,
+	--a11.device_type_id,
+	--a11.device_model,
+	max(case when a14.device_model = '--' then a14.device_type_desc else a14.device_type_desc || ' (' || a14.device_model || ')' end)  device_model0,
 	a12.sdk_version,
 	a14.device_category_id,
+        a14.brand,
 	a14.manufacturer,
-	a14.device_type_id,
+	--a14.device_type_id,
+	max(case when a14.device_type_id=419 or a14.device_type_id=964 then a14.device_type_desc else a14.device_type_name end)  device_type_desc,
 	a14.device_model_override,
-	a14.brand,
-	a15.device_major_category_id
+	a15.device_major_category_id,
+        a15.device_category,
+        a19.call_center_desc
 from
         dse.cs_device_contact_agg a11
 join	dse.device_client_rollup_d a12 
@@ -19,9 +24,11 @@ join	dse.device_model_rollup_d a14
 	    a11.device_type_id = a14.device_type_id)
 join	dse.device_category_d a15
 	    on (a14.device_category_id = a15.device_category_id)
+join	dse.cs_call_center_d a19
+	    on (a11.call_center_id = a19.call_center_id)
 where a11.fact_date > 20170101
-
-
+        and answered_cnt>0
+group by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,24,25,26,27,29,30,31,32
 
 ---
 ---
