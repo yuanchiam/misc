@@ -92,7 +92,8 @@ select
     cf.fact_date,
     cf.fact_utc_date,
     cc.call_center_desc,
-    case when rcr.contact_code is null then 0 else 1 end as rcr7
+    case when rcr.contact_code is null then 0 else 1 end as rcr7,
+    (cf.acw_duration_secs+cf.customer_hold_duration_secs+cf.answer_hold_duration_secs+cf.talk_duration_secs)/60.0 as ht
 from dse.cs_contact_f cf
 join dse.cs_transfer_type_d trt on cf.transfer_type_id = trt.transfer_type_id
 join dse.cs_contact_skill_d r on r.contact_skill_id=cf.contact_skill_id
