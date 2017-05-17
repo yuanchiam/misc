@@ -90,6 +90,15 @@ select
     cf.is_assistance_requested,
     cf.is_secondary_skill_contact,
     cf.fact_date,
-    cf.fact_utc_date
+    cf.fact_utc_date,
+    cc.call_center_desc
 from dse.cs_contact_f cf
-where cf.fact_utc_date>20170101
+join dse.cs_transfer_type_d trt on cf.transfer_type_id = trt.transfer_type_id
+join dse.cs_contact_skill_d r on r.contact_skill_id=cf.contact_skill_id
+join dse.cs_call_center_d cc on cc.call_center_id=cf.call_center_id 
+where cf.fact_utc_date >= 20170101    
+--always include these extra filters to remove research and escalated tickets or your numbers will be inflated
+and r.escalation_code not in ('G-Escalation', 'SC-Consult','SC-Escalation','Corp-Escalation')
+and trt.major_transfer_type_desc not in ('TRANSFER_OUT')
+and cf.answered_cnt>0
+and cf.contact_subchannel_id in ('Phone', 'Chat', 'voip','InApp', 'MBChat')
