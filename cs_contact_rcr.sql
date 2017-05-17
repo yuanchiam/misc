@@ -91,11 +91,19 @@ select
     cf.is_secondary_skill_contact,
     cf.fact_date,
     cf.fact_utc_date,
-    cc.call_center_desc
+    cc.call_center_desc,
+    case when rcr.contact_code is null then 0 else 1 end as rcr7
 from dse.cs_contact_f cf
 join dse.cs_transfer_type_d trt on cf.transfer_type_id = trt.transfer_type_id
 join dse.cs_contact_skill_d r on r.contact_skill_id=cf.contact_skill_id
 join dse.cs_call_center_d cc on cc.call_center_id=cf.call_center_id 
+
+left join (select contact_code from dse.cs_recontact_f
+    where days_to_recontact_cnt<=7
+    and has_recontact_cnt =1
+    and fact_utc_date >= cast(date_format((current_date - interval '3' month ), '%Y%m%d') as bigint)  
+    group by contact_code) rcr on cf.contact_code = rcr.contact_code
+
 where cf.fact_utc_date >= 20170101    
 --always include these extra filters to remove research and escalated tickets or your numbers will be inflated
 and r.escalation_code not in ('G-Escalation', 'SC-Consult','SC-Escalation','Corp-Escalation')
