@@ -1,3 +1,9 @@
+select contact_full.*,
+aht_details.aht_prior4w
+
+from
+
+(
 select 
 test_assignments.cs_test_id,
 test_assignments.cs_test_cell_id,
@@ -55,6 +61,37 @@ select
  and trt.major_transfer_type_desc not in ('TRANSFER_OUT')
  and cf.answered_cnt>0
  and cf.call_center_id in ('NCSL')
+ and fact_utc_date >= 20170507
 ) contact_details
 
 on test_assignments.chewbacca_user_id=contact_details.chewbacca_user_id
+) contact_full
+
+join
+
+(
+select 
+ cf.chewbacca_user_id,
+ avg((((coalesce(cf.talk_duration_secs,0)+coalesce(cf.acw_duration_secs,0)+coalesce(cf.answer_hold_duration_secs,0))/60.0))) aht_prior4w
+ from dse.cs_contact_f cf
+ join dse.cs_transfer_type_d trt on cf.transfer_type_id = trt.transfer_type_id
+ join dse.cs_contact_skill_d r on r.contact_skill_id=cf.contact_skill_id
+ join dse.cs_call_center_d cc on cc.call_center_id=cf.call_center_id 
+ join dse.account_d acc on acc.account_id=cf.account_id
+ join dse.geo_country_d geo on acc.country_iso_code=geo.country_iso_code
+ left join (select contact_code from dse.cs_recontact_f
+            where days_to_recontact_cnt<=7
+            and has_recontact_cnt =1
+            and fact_utc_date >= 20170507
+            group by contact_code) rcr on cf.contact_code = rcr.contact_code
+ where cf.fact_utc_date >= cast(date_format((current_date - interval '3' month ), '%Y%m%d') as bigint)
+ and r.escalation_code not in ('G-Escalation', 'SC-Consult','SC-Escalation','Corp-Escalation')
+ and trt.major_transfer_type_desc not in ('TRANSFER_OUT')
+ and cf.answered_cnt>0
+ and cf.call_center_id in ('NCSL') 
+ and cf.fact_utc_date>=20170401
+ and cf.fact_utc_date<=20170430
+ group by cf.chewbacca_user_id
+) aht_details
+
+on contact_full.chewbacca_user_id=aht_details.chewbacca_user_id
