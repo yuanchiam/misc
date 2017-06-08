@@ -95,3 +95,52 @@ select
 ) aht_details
 
 on contact_full.chewbacca_user_id=aht_details.chewbacca_user_id
+
+---------------
+---- FINAL ----
+---------------
+
+select	
+    abcell.cs_test_id cs_test_id,
+	alloc.cs_test_cell_id  cs_test_cell_id,
+	contact.fact_date calendar_date,
+	contact.ticket_gate_level2_desc  ticket_gate_level2_desc,
+	contact.ticket_gate_level1_desc  ticket_gate_level1_desc,
+	contact.ticket_gate_level0_desc  ticket_gate_level0_desc,
+	contact.chewbacca_user_id  chewbacca_user_id,
+	agent.current_supervisor_chewbacca_user_id,
+	contact.contact_subchannel_id,
+	subchannel.contact_channel_id,
+	contact.member_type_desc,
+	contact.customer_lookup_type,
+	alloc.allocation_date,
+	alloc.deallocation_date,
+	contact.answered_cnt,
+	(((coalesce(contact.talk_duration_secs,0)+coalesce(contact.acw_duration_secs,0)+coalesce(contact.answer_hold_duration_secs,0))/60.0)) handle_time,
+	contact.survey_cnt,
+	contact.dsat_negative_survey_response_cnt,
+	contact.dsat_survey_response_cnt,
+	contact.negative_survey_response_cnt,
+	contact.survey_response_cnt,
+	case when recontact.days_to_recontact_cnt < 8 then recontact.has_recontact_cnt else 0 end as rcr7,
+	round(ahist.tenure_day_cnt/7.0) as tenure_weeks
+from dse.cs_contact_f contact join dse.cs_agent_abtest_allocation_d alloc on (contact.chewbacca_user_id = alloc.chewbacca_user_id)
+        left join dse.cs_recontact_f recontact on contact.contact_code = recontact.contact_code and contact.fact_date = recontact.fact_date
+        join dse.cs_transfer_type_d	transfer on contact.transfer_type_id = transfer.transfer_type_id
+        join dse.cs_contact_subchannel_d subchannel on contact.contact_subchannel_id = subchannel.contact_subchannel_id
+        join dse.cs_agent_abtest_cell_d abcell on alloc.cs_test_cell_id =  abcell.cs_test_cell_id
+        join dse.cs_agent_abtest_d	abtest on abcell.cs_test_id = abtest.cs_test_id
+        join dse.cs_agent_d agent on agent.chewbacca_user_id = contact.chewbacca_user_id
+        join dse.cs_agent_d mgr on agent.current_supervisor_chewbacca_user_id = mgr.chewbacca_user_id
+        join dse.cs_agent_hist_d ahist on contact.chewbacca_user_id = ahist.chewbacca_user_id and contact.fact_date = ahist.calendar_date
+        join dse.dt_date_d date_d on contact.fact_date = date_d.calendar_date
+        
+where alloc.cs_test_id in ('SLC00004')
+ and contact.call_center_id in ('NCSL')
+ and contact.fact_date between alloc.allocation_date and alloc.deallocation_date
+ --and contact.fact_date>=20170507
+ --and contact.fact_date<=20170430
+ and subchannel.contact_channel_id in ('Phone', 'Chat')
+ and contact.ticket_gate_level0_desc in ('Content','Getting Started')
+ and transfer.major_transfer_type_desc not in ('TRANSFER_OUT')
+ and contact.answered_cnt>0
