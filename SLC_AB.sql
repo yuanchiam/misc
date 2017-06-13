@@ -108,6 +108,7 @@ select
 	contact.ticket_gate_level1_desc  ticket_gate_level1_desc,
 	contact.ticket_gate_level0_desc  ticket_gate_level0_desc,
 	contact.chewbacca_user_id  chewbacca_user_id,
+	contact.account_id account_id,
 	agent.current_supervisor_chewbacca_user_id,
 	contact.contact_subchannel_id,
 	subchannel.contact_channel_id,
