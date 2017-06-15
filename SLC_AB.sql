@@ -124,7 +124,11 @@ select
 	contact.negative_survey_response_cnt,
 	contact.survey_response_cnt,
 	case when recontact.days_to_recontact_cnt < 8 then recontact.has_recontact_cnt else 0 end as rcr7,
-	round(ahist.tenure_day_cnt/7.0) as tenure_weeks
+	round(ahist.tenure_day_cnt/7.0) as tenure_weeks,
+	
+	case when contact.account_id<=0  OR (contact.account_id>0 AND contact.member_type_desc='Non-Member' AND tic.customer_lookup_type='voipPop')
+	then 0 else 1 end as auth_flag
+	
 from dse.cs_contact_f contact join dse.cs_agent_abtest_allocation_d alloc on (contact.chewbacca_user_id = alloc.chewbacca_user_id)
         left join dse.cs_recontact_f recontact on contact.contact_code = recontact.contact_code and contact.fact_date = recontact.fact_date
         join dse.cs_transfer_type_d	transfer on contact.transfer_type_id = transfer.transfer_type_id
@@ -135,13 +139,13 @@ from dse.cs_contact_f contact join dse.cs_agent_abtest_allocation_d alloc on (co
         join dse.cs_agent_d mgr on agent.current_supervisor_chewbacca_user_id = mgr.chewbacca_user_id
         join dse.cs_agent_hist_d ahist on contact.chewbacca_user_id = ahist.chewbacca_user_id and contact.fact_date = ahist.calendar_date
         join dse.dt_date_d date_d on contact.fact_date = date_d.calendar_date
+        left join etl.cs_ticket_f tic on contact.first_ticket_id=tic.ticket_code
         
 where alloc.cs_test_id in ('SLC00004')
  and contact.call_center_id in ('NCSL')
  and contact.fact_date between alloc.allocation_date and alloc.deallocation_date
- --and contact.fact_date>=20170507
- --and contact.fact_date<=20170430
  and subchannel.contact_channel_id in ('Phone', 'Chat')
  and contact.ticket_gate_level0_desc in ('Content','Getting Started')
  and transfer.major_transfer_type_desc not in ('TRANSFER_OUT')
  and contact.answered_cnt>0
+ 
