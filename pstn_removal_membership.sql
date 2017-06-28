@@ -1,3 +1,4 @@
+-- daily view, needs to average if weekly, monthly view
 select aa.*,
 bb.country_desc,
 case when bb.country_desc in
