@@ -11,3 +11,20 @@ STORED AS INPUTFORMAT
   'org.apache.hadoop.mapred.TextInputFormat' 
 OUTPUTFORMAT 
   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat';
+
+--
+
+use ychiam;
+CREATE TABLE ychiam.cs_message_alloc (
+    message_guid string,
+    account_id bigint,
+    message_id bigint,
+    send_epoch bigint,
+    country_iso_code string,
+    status_desc string,
+    fail_reason_short_desc string,
+    message_name string,
+    channel string
+)
+PARTITIONED BY (send_utc_dateint bigint)
+STORED AS TEXTFILE;
